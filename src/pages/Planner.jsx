@@ -1,25 +1,7 @@
 import React, {useState} from 'react'
 
-// Planner logic ported from previous app.js
-const typeProfiles = {
-  'Adventure': {accommodation:0.25,food:0.15,transport:0.2,activities:0.35,misc:0.05},
-  'Family': {accommodation:0.28,food:0.2,transport:0.2,activities:0.25,misc:0.07},
-  'Solo': {accommodation:0.22,food:0.18,transport:0.2,activities:0.3,misc:0.1},
-  'Luxury': {accommodation:0.45,food:0.15,transport:0.15,activities:0.18,misc:0.07},
-  'Budget': {accommodation:0.18,food:0.18,transport:0.24,activities:0.28,misc:0.12}
-}
-
-const attractionsDB = {
-  'paris':['Eiffel Tower','Louvre Museum','Montmartre','Seine River Walk'],
-  'bali':['Uluwatu Temple','Tegallalang Rice Terraces','Kuta Beach','Ubud Market'],
-  'tokyo':['Senso-ji Temple','Shibuya Crossing','Tokyo Skytree','Tsukiji Outer Market'],
-  'new york':['Statue of Liberty','Central Park','Times Square','Metropolitan Museum of Art'],
-  'rome':['Colosseum','Vatican Museums','Trevi Fountain','Pantheon'],
-  'cape town':['Table Mountain','V&A Waterfront','Cape Point','Kirstenbosch Gardens']
-}
-
-function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1) }
-function escapeHtml(s){ if(!s && s!==0) return ''; return String(s).replace(/[&<>\"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+// API base URL
+const API_BASE_URL = 'http://localhost:3000'
 
 export default function Planner(){
   const [start,setStart] = useState('')
@@ -29,152 +11,262 @@ export default function Planner(){
   const [type,setType] = useState('Adventure')
   const [plan,setPlan] = useState(null)
   const [status,setStatus] = useState('')
+  const [loading,setLoading] = useState(false)
 
-  function simpleLocalActivity(dest){ return `Explore the popular neighborhood in ${dest}` }
-  function pickActivityForType(type, day, dest, attractions){
-    const templates = {
-      'Adventure': ['Hike to a scenic viewpoint','Water sports or beach time','Local outdoor tour','Adventure activity (zipline, diving)'],
-      'Family': ['Easy city tour','Kid-friendly museum','Park / beach day','Relaxed local experience'],
-      'Solo': ['Cafe-hopping and walking tour','Meetup or group tour','Free time to explore','Local hidden gems off the beaten path'],
-      'Luxury': ['Spa or premium dining','Private guided tour','Exclusive experience','Leisure & shopping day'],
-      'Budget': ['Walking tour & free attractions','Street food & markets','Public transport exploration','Free parks and viewpoints']
+  // Function to call API for travel plan
+  async function fetchTravelPlan(planData) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/travel-plan`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(planData)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching travel plan:', error);
+      throw error;
     }
-    const pool = templates[type] || templates['Solo']
-    const act = []
-    if(attractions && attractions.length) act.push(attractions[(day-1) % attractions.length])
-    act.push(pool[(day-1) % pool.length])
-    act.push(simpleLocalActivity(dest))
-    return act
   }
 
-  function suggestFood(destination,type){
-    const base = ['Local specialty','Popular street food','Well-known local restaurant']
-    if(type==='Luxury') base.unshift('Fine dining experience')
-    if(type==='Budget') base.push('Affordable local favourites')
-    return base
-  }
+  function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1) }
+  function escapeHtml(s){ if(!s && s!==0) return ''; return String(s).replace(/[&<>\"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
-  function generateTips(type,destination){
-    const tips = []
-    tips.push(`Check local transportation options in ${destination} and pre-book when needed.`)
-    if(type==='Adventure') tips.push('Pack appropriate outdoor gear and check weather conditions.')
-    if(type==='Luxury') tips.push('Consider booking experiences in advance to secure availability.')
-    if(type==='Budget') tips.push('Use local markets and public transport to save money.')
-    tips.push('Always carry a small first-aid kit and keep digital copies of important documents.')
-    return tips
-  }
-
-  function generatePlan({start,destination,budget,days,type}){
-    const profile = typeProfiles[type] || typeProfiles['Solo']
-    const breakdown = {}
-    Object.keys(profile).forEach(k => breakdown[k] = Math.round(budget * profile[k]))
-    const key = destination.toLowerCase().split(',')[0].trim()
-    const known = Object.keys(attractionsDB).find(k=>key.includes(k)) || null
-    const attractions = known ? attractionsDB[known] : [
-      `Top museum in ${destination}`,
-      `Popular viewpoint in ${destination}`,
-      `Historic area of ${destination}`,
-      `Local market in ${destination}`
-    ]
-    const itinerary = []
-    for(let d=1; d<=days; d++){
-      const activity = pickActivityForType(type, d, destination, attractions)
-      itinerary.push({day:d, activities:activity})
-    }
-    const food = suggestFood(destination, type)
-    const tips = generateTips(type, destination)
-    return {start,destination,budget,days,type,breakdown,itinerary,attractions,food,tips}
-  }
-
-  function onSubmit(e){
+  async function onSubmit(e){
     e.preventDefault()
-    if(!start || !destination || !budget || !days){ setStatus('Please complete the form fields.'); return }
-    setStatus('Generating plan...')
-    setTimeout(()=>{
-      const p = generatePlan({start,destination,days:parseInt(days,10),budget: Number(budget),type})
-      setPlan(p)
-      setStatus('')
-    },400)
+    if(!start || !destination || !budget || !days){ 
+      setStatus('Please complete the form fields.'); 
+      return 
+    }
+
+    setLoading(true)
+    setStatus('Generating AI travel plan...')
+    setPlan(null)
+
+    try {
+      const planData = {
+        start,
+        destination,
+        days: parseInt(days, 10),
+        budget: Number(budget),
+        type
+      };
+
+      const apiPlan = await fetchTravelPlan(planData);
+      
+      if (apiPlan.error) {
+        setStatus('Error generating plan. Please try again.');
+        console.error('API Error:', apiPlan);
+      } else {
+        setPlan(apiPlan);
+        setStatus('');
+      }
+    } catch (error) {
+      setStatus('Failed to connect to server. Please check if server is running.');
+      console.error('Network Error:', error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <div className="container planner-page">
-      <h1>Travel Planner</h1>
-      <p className="lead">Tell us a few details and get an AI-style trip plan instantly.</p>
+      <h1>AI Travel Planner</h1>
+      <p className="lead">Tell us a few details and get an AI-powered trip plan instantly with real-time suggestions.</p>
 
       <section className="planner-grid">
         <form onSubmit={onSubmit} className="planner-form">
-          <label>Starting Location
-            <input value={start} onChange={e=>setStart(e.target.value)} type="text" placeholder="e.g., New York" required />
+          <label>
+            Starting Location
+            <input 
+              value={start} 
+              onChange={e=>setStart(e.target.value)} 
+              type="text" 
+              placeholder="e.g., Mumbai, India" 
+              required 
+            />
           </label>
-          <label>Destination
-            <input value={destination} onChange={e=>setDestination(e.target.value)} type="text" placeholder="e.g., Paris" required />
+          
+          <label>
+            Destination
+            <input 
+              value={destination} 
+              onChange={e=>setDestination(e.target.value)} 
+              type="text" 
+              placeholder="e.g., Paris, France" 
+              required 
+            />
           </label>
-          <label>Budget (USD)
-            <input value={budget} onChange={e=>setBudget(e.target.value)} type="number" min="50" placeholder="e.g., 1500" required />
+          
+          <label>
+            Budget (USD)
+            <input 
+              value={budget} 
+              onChange={e=>setBudget(e.target.value)} 
+              type="number" 
+              min="50" 
+              placeholder="e.g., 1500" 
+              required 
+            />
           </label>
-          <label>Number of Days
-            <input value={days} onChange={e=>setDays(e.target.value)} type="number" min="1" max="30" required />
+          
+          <label>
+            Number of Days
+            <input 
+              value={days} 
+              onChange={e=>setDays(e.target.value)} 
+              type="number" 
+              min="1" 
+              max="30" 
+              required 
+            />
           </label>
-          <label>Travel Type
+          
+          <label>
+            Travel Type
             <select value={type} onChange={e=>setType(e.target.value)}>
-              <option>Adventure</option>
-              <option>Family</option>
-              <option>Solo</option>
-              <option>Luxury</option>
-              <option>Budget</option>
+              <option value="Adventure">🎒 Adventure Travel</option>
+              <option value="Family">👨‍👩‍👧‍👦 Family Trip</option>
+              <option value="Solo">🚶‍♂️ Solo Journey</option>
+              <option value="Luxury">💎 Luxury Experience</option>
+              <option value="Budget">💰 Budget Travel</option>
             </select>
           </label>
           <div className="form-actions">
-            <button className="btn btn-primary" type="submit">Generate Plan</button>
-            <button type="button" className="btn btn-ghost" onClick={()=>{setStart('');setDestination('');setBudget('');setDays(3);setType('Adventure');setPlan(null);setStatus('')}}>Reset</button>
+            <button 
+              className="btn btn-primary" 
+              type="submit" 
+              disabled={loading}
+            >
+              {loading ? 'Generating AI Plan...' : 'Generate AI Plan'}
+            </button>
+            <button 
+              type="button" 
+              className="btn btn-ghost" 
+              onClick={()=>{setStart('');setDestination('');setBudget('');setDays(3);setType('Adventure');setPlan(null);setStatus('')}}
+              disabled={loading}
+            >
+              Reset
+            </button>
           </div>
-          {status && <p className="muted">{status}</p>}
+          {status && (
+            <div className="status-message">
+              <p className="muted">{status}</p>
+            </div>
+          )}
         </form>
 
         <section className="results">
-          {!plan && (
+          {!plan && !loading && (
             <div className="placeholder">
-              <h3>Your plan will appear here</h3>
-              <p>Fill the form and click <strong>Generate Plan</strong> to see suggestions.</p>
+              <h3>Your AI travel plan will appear here</h3>
+              <p>Fill the form and click <strong>Generate AI Plan</strong> to see AI-powered suggestions.</p>
             </div>
           )}
 
-          {plan && (
-            <div>
-              <h2>Plan from {escapeHtml(plan.start)} → {escapeHtml(plan.destination)}</h2>
-              <p className="muted">{plan.days} days • {plan.type} travel • Estimated budget: ${plan.budget}</p>
+          {loading && (
+            <div className="placeholder loading">
+              <div className="loading-spinner">🤖</div>
+              <h3>AI is creating your travel plan...</h3>
+              <p>Please wait while we generate personalized recommendations for your trip.</p>
+            </div>
+          )}
 
-              <section className="itinerary">
-                {plan.itinerary.map(d=> (
-                  <div className="day-card" key={d.day}>
-                    <strong>Day {d.day}</strong>
-                    <p>{d.activities.join(' • ')}</p>
+          {plan && !plan.error && (
+            <div className="plan-results">
+              <div className="plan-header">
+                <h2>🤖 AI Generated Plan: {escapeHtml(plan.start)} → {escapeHtml(plan.destination)}</h2>
+                <p className="muted plan-meta">
+                  {plan.days} days • {plan.type} travel • Estimated budget: ${plan.budget}
+                </p>
+              </div>
+
+              {plan.itinerary && plan.itinerary.length > 0 && (
+                <section className="itinerary-section">
+                  <h3 className="section-title">📅 Day-by-Day Itinerary</h3>
+                  <div className="itinerary">
+                    {plan.itinerary.map(d=> (
+                      <div className="day-card" key={d.day}>
+                        <div className="day-header">
+                          <strong>Day {d.day}</strong>
+                        </div>
+                        <div className="day-activities">
+                          <p>{Array.isArray(d.activities) ? d.activities.join(' • ') : d.activities}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </section>
+                </section>
+              )}
 
-              <h3 style={{marginTop:'1rem'}}>Estimated Budget Breakdown</h3>
-              <div className="budget-list">
-                {Object.entries(plan.breakdown).map(([k,v])=> (
-                  <div className="budget-item" key={k}>{capitalize(k)}: ${v}</div>
-                ))}
-              </div>
+              {plan.breakdown && (
+                <section className="budget-section">
+                  <h3 className="section-title">💰 Estimated Budget Breakdown</h3>
+                  <div className="budget-list">
+                    {Object.entries(plan.breakdown).map(([k,v])=> (
+                      <div className="budget-item" key={k}>
+                        <span className="budget-category">{capitalize(k)}</span>
+                        <span className="budget-amount">${v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
 
-              <h3 style={{marginTop:'1rem'}}>Best Places to Visit</h3>
-              <div className="grid">
-                {plan.attractions.slice(0,6).map(a=> (<div className="card-body" key={a}><strong>{a}</strong></div>))}
-              </div>
+              {plan.attractions && plan.attractions.length > 0 && (
+                <section className="attractions-section">
+                  <h3 className="section-title">🏛️ Must-Visit Places</h3>
+                  <div className="grid">
+                    {plan.attractions.slice(0,6).map((a, index)=> (
+                      <div className="card-body attraction-card" key={index}>
+                        <strong>{a}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
 
-              <h3 style={{marginTop:'1rem'}}>Food Recommendations</h3>
-              <div className="card-body"><p>{plan.food.join(', ')}</p></div>
+              {plan.food && plan.food.length > 0 && (
+                <section className="food-section">
+                  <h3 className="section-title">🍽️ Food Recommendations</h3>
+                  <div className="card-body food-card">
+                    <p>{Array.isArray(plan.food) ? plan.food.join(', ') : plan.food}</p>
+                  </div>
+                </section>
+              )}
 
-              <h3 style={{marginTop:'1rem'}}>Travel Tips</h3>
-              <div className="card-body">
-                <ul>
-                  {plan.tips.map(t=> <li className="muted" key={t}>{t}</li>)}
-                </ul>
-              </div>
+              {plan.tips && plan.tips.length > 0 && (
+                <section className="tips-section">
+                  <h3 className="section-title">💡 AI Travel Tips</h3>
+                  <div className="card-body tips-card">
+                    <ul className="tips-list">
+                      {plan.tips.map((t, index)=> <li className="muted" key={index}>{t}</li>)}
+                    </ul>
+                  </div>
+                </section>
+              )}
+            </div>
+          )}
+
+          {plan && plan.error && (
+            <div className="placeholder error">
+              <h3>⚠️ Error generating plan</h3>
+              <p>Sorry, there was an issue with AI generation. Please try again.</p>
+              {plan.raw && (
+                <details style={{marginTop: '1rem', textAlign: 'left'}}>
+                  <summary style={{cursor: 'pointer', color: '#94a3b8'}}>View Error Details</summary>
+                  <pre style={{fontSize: '12px', color: '#666', marginTop: '0.5rem', whiteSpace: 'pre-wrap'}}>
+                    {plan.raw.substring(0, 500)}...
+                  </pre>
+                </details>
+              )}
             </div>
           )}
         </section>
