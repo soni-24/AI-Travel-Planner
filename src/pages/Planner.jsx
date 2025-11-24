@@ -1,13 +1,13 @@
 import React, {useState} from 'react'
 
 // API base URL
-const API_BASE_URL = 'http://localhost:3000'
+const API_BASE_URL = 'http://localhost:4000'
 
 export default function Planner(){
   const [start,setStart] = useState('')
   const [destination,setDestination] = useState('')
   const [budget,setBudget] = useState('')
-  const [days,setDays] = useState(3)
+  const [days,setDays] = useState('')
   const [type,setType] = useState('Adventure')
   const [plan,setPlan] = useState(null)
   const [status,setStatus] = useState('')
@@ -77,109 +77,123 @@ export default function Planner(){
   }
 
   return (
-    <div className="container planner-page">
-      <h1>AI Travel Planner</h1>
-      <p className="lead">Tell us a few details and get an AI-powered trip plan instantly with real-time suggestions.</p>
+    <div className="planner-container">
+      <div className="planner-header">
+        <h1 className="planner-title">AI Travel Planner</h1>
+        <p className="planner-subtitle">Tell us a few details and get an AI-powered trip plan instantly with real-time suggestions.</p>
+      </div>
 
-      <section className="planner-grid">
-        <form onSubmit={onSubmit} className="planner-form">
-          <label>
-            Starting Location
-            <input 
-              value={start} 
-              onChange={e=>setStart(e.target.value)} 
-              type="text" 
-              placeholder="e.g., Mumbai, India" 
-              required 
-            />
-          </label>
+      <div className="form-container">
+        <form onSubmit={onSubmit}>
+          <div className="form-grid">
+            <div className="input-group">
+              <label>Starting Location</label>
+              <input 
+                value={start} 
+                onChange={e=>setStart(e.target.value)} 
+                type="text" 
+                placeholder="e.g., Mumbai, India" 
+                required 
+              />
+            </div>
+            
+            <div className="input-group">
+              <label>Destination</label>
+              <input 
+                value={destination} 
+                onChange={e=>setDestination(e.target.value)} 
+                type="text" 
+                placeholder="e.g., Paris, France" 
+                required 
+              />
+            </div>
+            
+            <div className="input-group">
+              <label>Budget (USD)</label>
+              <input 
+                value={budget} 
+                onChange={e=>setBudget(e.target.value)} 
+                type="number" 
+                min="50" 
+                placeholder="e.g., 1500" 
+                required 
+              />
+            </div>
+            
+            <div className="input-group">
+              <label>Number of Days</label>
+              <input 
+                value={days} 
+                onChange={e=>setDays(e.target.value)} 
+                type="number" 
+                min="1" 
+                max="30" 
+                required 
+              />
+            </div>
+            
+            <div className="input-group">
+              <label>Travel Type</label>
+              <select value={type} onChange={e=>setType(e.target.value)}>
+                <option value="Adventure">🎒 Adventure Travel</option>
+                <option value="Family">👨‍👩‍👧‍👦 Family Trip</option>
+                <option value="Solo">🚶‍♂️ Solo Journey</option>
+                <option value="Luxury">💎 Luxury Experience</option>
+                <option value="Budget">💰 Budget Travel</option>
+              </select>
+            </div>
+          </div>
           
-          <label>
-            Destination
-            <input 
-              value={destination} 
-              onChange={e=>setDestination(e.target.value)} 
-              type="text" 
-              placeholder="e.g., Paris, France" 
-              required 
-            />
-          </label>
-          
-          <label>
-            Budget (USD)
-            <input 
-              value={budget} 
-              onChange={e=>setBudget(e.target.value)} 
-              type="number" 
-              min="50" 
-              placeholder="e.g., 1500" 
-              required 
-            />
-          </label>
-          
-          <label>
-            Number of Days
-            <input 
-              value={days} 
-              onChange={e=>setDays(e.target.value)} 
-              type="number" 
-              min="1" 
-              max="30" 
-              required 
-            />
-          </label>
-          
-          <label>
-            Travel Type
-            <select value={type} onChange={e=>setType(e.target.value)}>
-              <option value="Adventure">🎒 Adventure Travel</option>
-              <option value="Family">👨‍👩‍👧‍👦 Family Trip</option>
-              <option value="Solo">🚶‍♂️ Solo Journey</option>
-              <option value="Luxury">💎 Luxury Experience</option>
-              <option value="Budget">💰 Budget Travel</option>
-            </select>
-          </label>
-          <div className="form-actions">
+          <div className="button-group">
             <button 
-              className="btn btn-primary" 
               type="submit" 
+              className="generate-btn"
               disabled={loading}
             >
-              {loading ? 'Generating AI Plan...' : 'Generate AI Plan'}
+              {loading ? (
+                <>
+                  <span className="loading"></span>
+                  Generating AI Plan...
+                </>
+              ) : (
+                'Generate AI Plan'
+              )}
             </button>
             <button 
               type="button" 
-              className="btn btn-ghost" 
-              onClick={()=>{setStart('');setDestination('');setBudget('');setDays(3);setType('Adventure');setPlan(null);setStatus('')}}
+              className="reset-btn"
+              onClick={()=>{setStart('');setDestination('');setBudget('');setDays('');setType('Adventure');setPlan(null);setStatus('')}}
               disabled={loading}
             >
               Reset
             </button>
           </div>
+          
           {status && (
-            <div className="status-message">
-              <p className="muted">{status}</p>
+            <div className="status-message" style={{marginTop: '20px', textAlign: 'center'}}>
+              <p style={{color: 'rgba(255,255,255,0.8)'}}>{status}</p>
             </div>
           )}
         </form>
+      </div>
 
-        <section className="results">
-          {!plan && !loading && (
-            <div className="placeholder">
-              <h3>Your AI travel plan will appear here</h3>
-              <p>Fill the form and click <strong>Generate AI Plan</strong> to see AI-powered suggestions.</p>
-            </div>
-          )}
+      <section className="results">
+        {!plan && !loading && (
+          <div className="result-section">
+            <h3 className="result-title">Your AI travel plan will appear here</h3>
+            <p className="result-description">Fill the form and click <strong>Generate AI Plan</strong> to see AI-powered suggestions.</p>
+          </div>
+        )}
 
-          {loading && (
-            <div className="placeholder loading">
-              <div className="loading-spinner">🤖</div>
-              <h3>AI is creating your travel plan...</h3>
-              <p>Please wait while we generate personalized recommendations for your trip.</p>
-            </div>
-          )}
+        {loading && (
+          <div className="result-section">
+            <div className="loading-spinner" style={{fontSize: '3rem', marginBottom: '1rem'}}>🤖</div>
+            <h3 className="result-title">AI is creating your travel plan...</h3>
+            <p className="result-description">Please wait while we generate personalized recommendations for your trip.</p>
+          </div>
+        )}
 
-          {plan && !plan.error && (
+        {plan && !plan.error && (
             <div className="plan-results">
               <div className="plan-header">
                 <h2>🤖 AI Generated Plan: {escapeHtml(plan.start)} → {escapeHtml(plan.destination)}</h2>
@@ -270,7 +284,6 @@ export default function Planner(){
             </div>
           )}
         </section>
-      </section>
     </div>
   )
 }

@@ -11,7 +11,7 @@ const app = express();
 // Enable CORS for frontend
 app.use(cors());
 app.use(express.json());
-const PORT = 3000;
+const PORT = 4000;
 
 // Gemini Setup
 const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
