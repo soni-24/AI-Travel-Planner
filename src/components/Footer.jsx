@@ -9,7 +9,7 @@ export default function Footer(){
           gap: '1rem'
         }}>
           <p className="text-muted" style={{fontSize: '0.875rem', margin: 0}}>
-            © 2025 AI Travel Planner.
+            © 2025 Smart Travel Planner.
           </p>
           <nav className="flex gap-4">
             <a 

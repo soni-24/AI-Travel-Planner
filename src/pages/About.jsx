@@ -3,7 +3,7 @@ import React from 'react'
 export default function About(){
   return (
     <div className="container">
-      <h1>About AI Travel Planner</h1>
+      <h1>About Smart Travel Planner</h1>
       <p className="lead">Your smart companion for planning unforgettable journeys</p>
 
       <section className="about-grid">

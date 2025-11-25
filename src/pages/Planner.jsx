@@ -47,7 +47,7 @@ export default function Planner(){
     }
 
     setLoading(true)
-    setStatus('Generating AI travel plan...')
+    setStatus('Generating your travel plan...')
     setPlan(null)
 
     try {
@@ -79,8 +79,8 @@ export default function Planner(){
   return (
     <div className="planner-container">
       <div className="planner-header">
-        <h1 className="planner-title">AI Travel Planner</h1>
-        <p className="planner-subtitle">Tell us a few details and get an AI-powered trip plan instantly with real-time suggestions.</p>
+        <h1 className="planner-title">Smart Travel Planner</h1>
+        <p className="planner-subtitle">Tell us a few details and get a personalized trip plan instantly with real-time suggestions.</p>
       </div>
 
       <div className="form-container">
@@ -153,10 +153,10 @@ export default function Planner(){
               {loading ? (
                 <>
                   <span className="loading"></span>
-                  Generating AI Plan...
+                  Generating Plan...
                 </>
               ) : (
-                'Generate AI Plan'
+                'Generate Travel Plan'
               )}
             </button>
             <button 
@@ -180,15 +180,15 @@ export default function Planner(){
       <section className="results">
         {!plan && !loading && (
           <div className="result-section">
-            <h3 className="result-title">Your AI travel plan will appear here</h3>
-            <p className="result-description">Fill the form and click <strong>Generate AI Plan</strong> to see AI-powered suggestions.</p>
+            <h3 className="result-title">Your travel plan will appear here</h3>
+            <p className="result-description">Fill the form and click <strong>Generate Travel Plan</strong> to see personalized suggestions.</p>
           </div>
         )}
 
         {loading && (
           <div className="result-section">
-            <div className="loading-spinner" style={{fontSize: '3rem', marginBottom: '1rem'}}>🤖</div>
-            <h3 className="result-title">AI is creating your travel plan...</h3>
+            <div className="loading-spinner" style={{fontSize: '3rem', marginBottom: '1rem'}}>�</div>
+            <h3 className="result-title">Creating your travel plan...</h3>
             <p className="result-description">Please wait while we generate personalized recommendations for your trip.</p>
           </div>
         )}
@@ -196,7 +196,7 @@ export default function Planner(){
         {plan && !plan.error && (
             <div className="plan-results">
               <div className="plan-header">
-                <h2>🤖 AI Generated Plan: {escapeHtml(plan.start)} → {escapeHtml(plan.destination)}</h2>
+                <h2>🗺️ Generated Plan: {escapeHtml(plan.start)} → {escapeHtml(plan.destination)}</h2>
                 <p className="muted plan-meta">
                   {plan.days} days • {plan.type} travel • Estimated budget: ${plan.budget}
                 </p>
@@ -258,7 +258,7 @@ export default function Planner(){
 
               {plan.tips && plan.tips.length > 0 && (
                 <section className="tips-section">
-                  <h3 className="section-title">💡 AI Travel Tips</h3>
+                  <h3 className="section-title">💡 Travel Tips</h3>
                   <div className="card-body tips-card">
                     <ul className="tips-list">
                       {plan.tips.map((t, index)=> <li className="muted" key={index}>{t}</li>)}
@@ -272,7 +272,7 @@ export default function Planner(){
           {plan && plan.error && (
             <div className="placeholder error">
               <h3>⚠️ Error generating plan</h3>
-              <p>Sorry, there was an issue with AI generation. Please try again.</p>
+              <p>Sorry, there was an issue generating your plan. Please try again.</p>
               {plan.raw && (
                 <details style={{marginTop: '1rem', textAlign: 'left'}}>
                   <summary style={{cursor: 'pointer', color: '#94a3b8'}}>View Error Details</summary>
