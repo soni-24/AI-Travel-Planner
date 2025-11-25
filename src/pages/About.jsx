@@ -8,7 +8,7 @@ export default function About(){
 
       <section className="about-grid">
         <div>
-          <h3>🤖 Smart Suggestions</h3>
+          <h3> Smart Suggestions</h3>
           <p>Our planner uses advanced algorithms to generate personalized travel suggestions based on your preferences. It combines curated destination data, local insights, and travel heuristics to create plausible, helpful itineraries and local tips.</p>
         </div>
 
