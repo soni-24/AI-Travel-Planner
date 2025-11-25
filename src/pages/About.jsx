@@ -39,7 +39,7 @@ export default function About(){
           </div>
 
           <div className="feature-card">
-            <div className="feature-icon">💰</div>
+            <div className="feature-icon">📊</div>
             <h4>Budget Smart</h4>
             <p>Get detailed budget breakdowns for accommodations, food, activities, and transportation tailored to your budget.</p>
           </div>
