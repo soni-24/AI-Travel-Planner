@@ -162,7 +162,7 @@ export default function Planner(){
             <button 
               type="button" 
               className="reset-btn"
-              onClick={()=>{setStart('');setDestination('');setBudget('');setDays('');setType('Adventure');setPlan(null);setStatus('')}}
+              onClick={()=>{setStart('');setDestination('');setBudget('');setDays(3);setType('Adventure');setPlan(null);setStatus('')}}
               disabled={loading}
             >
               Reset
