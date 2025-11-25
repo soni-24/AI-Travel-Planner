@@ -1,7 +1,7 @@
 import React, {useState} from 'react'
 
 // API base URL
-const API_BASE_URL = 'http://localhost:4000'
+const API_BASE_URL = 'http://localhost:3000'
 
 export default function Planner(){
   const [start,setStart] = useState('')
