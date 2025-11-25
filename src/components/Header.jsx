@@ -13,7 +13,7 @@ export default function Header({currentRoute}){
           <a href="#/" className="flex items-center gap-4" onClick={()=>setOpen(false)}>
             <img src="/images/logo.svg" alt="logo" style={{width: '36px', height: '36px'}} />
             <span style={{fontFamily: 'Poppins', fontWeight: 'bold', fontSize: '1.125rem', color: 'white'}}>
-              AI Travel Planner
+              Smart Travel Planner
             </span>
           </a>
 
